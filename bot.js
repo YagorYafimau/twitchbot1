@@ -359,14 +359,14 @@ bot.action('subscribe_more', (ctx) => {
         user.currentChannel = channel.link;
 
         // Генерируем безопасный callback_data
-        const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
+const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
 
-        ctx.reply(
-            `✨ Подпишитесь на канал: ${channel.link}`,
-            Markup.inlineKeyboard([ 
-                Markup.button.callback('Проверить подписку ✅', callbackData)
-            ])
-        );
+ctx.reply(
+    `✨ Подпишитесь на канал: ${channel.link}`,
+    Markup.inlineKeyboard([ 
+        Markup.button.callback('Проверить подписку ✅', callbackData)
+    ])
+);
     }
 });
 
