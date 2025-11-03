@@ -217,15 +217,25 @@ bot.action('check_subscription', (ctx) => {
     }
 });
 
-// Обработчик фото (скриншотов)
 bot.on('photo', (ctx) => {
     const userId = ctx.from.id;
     const user = users.get(userId);
 
-    if (user && user.step === 1) {
+    if (!user) return;
+
+    if (user.step === 1) {
         const photo = ctx.message.photo[0].file_id;
 
-        // Получаем ссылку на канал, на который нужно подписаться
+        // Если currentChannel не установлен, выбираем первый доступный
+        if (!user.currentChannel) {
+            const availableChannels = getAvailableChannels(userId);
+            if (availableChannels.length === 0) {
+                ctx.reply('❌ На данный момент нет каналов для подписки, попробуйте позже.');
+                return;
+            }
+            user.currentChannel = availableChannels[0].link;
+        }
+
         const targetChannelLink = user.currentChannel;
 
         // Пересылаем скриншот в админский чат
