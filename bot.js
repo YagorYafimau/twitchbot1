@@ -217,34 +217,44 @@ bot.action('check_subscription', (ctx) => {
     }
 });
 
-bot.on('photo', (ctx) => {
-    const userId = ctx.from.id;
-    const user = users.get(userId);
+bot.on('photo', async (ctx) => {
+    try {
+        const userId = ctx.from?.id;
+        if (!userId) return;
 
-    if (user && user.step === 1) {
-        const photo = ctx.message.photo?.[0]?.file_id;
-if (!photo) {
-    return ctx.reply('⚠️ Фото не найдено. Пожалуйста, отправьте скриншот снова.');
-}
+        const user = users.get(userId);
+        if (!user || user.step !== 1) return;
 
-        // Получаем ссылку на канал, на который нужно подписаться
-        const targetChannelLink = user.currentChannel;
+        const photo = ctx.message?.photo?.[0]?.file_id;
+        if (!photo) {
+            return ctx.reply('⚠️ Фото не найдено. Пожалуйста, отправьте скриншот снова.');
+        }
 
-        // Пересылаем скриншот в админский чат
-        ctx.telegram.sendPhoto(ADMIN_CHAT_ID, photo, {
-            caption: `Пользователь @${ctx.from.username} (ID: ${userId}) отправил скриншот для подтверждения подписки.\n\nСсылка на Twitch канал пользователя: ${user.twitch}\nСсылка на Twitch канал для подписки: ${targetChannelLink}`,
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        { text: 'Подтвердить ✅', callback_data: `approve_${userId}` },
-                        { text: 'Отклонить ❌', callback_data: `reject_${userId}` }
+        const targetChannelLink = user.currentChannel || 'не указано';
+
+        // Отправляем фото в админский чат с проверкой
+        try {
+            await ctx.telegram.sendPhoto(ADMIN_CHAT_ID, photo, {
+                caption: `Пользователь @${ctx.from.username || 'неизвестно'} (ID: ${userId}) отправил скриншот для подтверждения подписки.\n\nСсылка на Twitch канал пользователя: ${user.twitch || 'не указано'}\nСсылка на Twitch канал для подписки: ${targetChannelLink}`,
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: 'Подтвердить ✅', callback_data: `approve_${userId}` },
+                            { text: 'Отклонить ❌', callback_data: `reject_${userId}` }
+                        ]
                     ]
-                ]
-            }
-        });
+                }
+            });
+        } catch (err) {
+            console.error('Ошибка при отправке фото в админский чат:', err);
+            return ctx.reply('⚠️ Не удалось отправить фото администратору. Попробуйте снова.');
+        }
 
-        ctx.reply('Мы проверим вашу подписку, пожалуйста, подождите! ⏳');
+        await ctx.reply('Мы проверим вашу подписку, пожалуйста, подождите! ⏳');
         user.step = 2; // Ожидание ответа от администратора
+
+    } catch (err) {
+        console.error('Ошибка в обработчике фото:', err);
     }
 });
 
