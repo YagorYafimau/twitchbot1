@@ -409,11 +409,6 @@ bot.action(/check_subscription_new_(\d+)/, (ctx) => {
     const user = users.get(userId);
     const channelIndex = Number(ctx.match[1]);
 
-   bot.action(/check_subscription_new_(\d+)/, (ctx) => {
-    const userId = ctx.from.id;
-    const user = users.get(userId);
-    const channelIndex = Number(ctx.match[1]);
-
     if (!user) return ctx.reply('Ваши данные не найдены. Отправьте /start, чтобы начать заново.');
     if (channelIndex < 0 || channelIndex >= channels.length) {
         return ctx.reply('Ошибка: канал не найден 😕 Попробуйте позже.');
