@@ -115,7 +115,20 @@ bot.start((ctx) => {
 
 // Функция для проверки ссылки на Twitch
 function isTwitchLink(url) {
-    return url.includes('twitch.tv');
+    try {
+        const parsed = new URL(url.trim());
+        const hostnameValid =
+            parsed.hostname === 'www.twitch.tv' ||
+            parsed.hostname === 'twitch.tv' ||
+            parsed.hostname === 'm.twitch.tv'; // поддержка мобильных ссылок
+
+        const pathValid =
+            parsed.pathname.length > 1 && !parsed.pathname.includes('/', 2);
+
+        return hostnameValid && pathValid;
+    } catch {
+        return false;
+    }
 }
 
 // Обработчик текста
