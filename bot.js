@@ -346,25 +346,28 @@ bot.action('subscribe_more', (ctx) => {
         return arr;
     }
 
-    if (availableChannels.length === 0) {
-        ctx.reply(
-            'На данный момент нет доступных каналов для подписки 😕 Попробуйте позже',
-            Markup.inlineKeyboard([ 
-                Markup.button.callback('Хорошо 👌', 'ready_to_subscribe')
-            ])
-        );
-    } else {
-        const shuffled = shuffleArray(availableChannels);
-        const channel = shuffled[0];
-        user.currentChannel = channel.link;
-        ctx.reply(
-            `✨ Подпишитесь на канал: ${channel.link}`,
-            Markup.inlineKeyboard([ 
-                Markup.button.callback(`Проверить подписку ✅`, `check_subscription_new_${channel.link}`)
-            ])
-        );
-    }
-});
+   if (availableChannels.length === 0) {
+    ctx.reply(
+        'На данный момент нет доступных каналов для подписки 😕 Попробуйте позже',
+        Markup.inlineKeyboard([ 
+            Markup.button.callback('Хорошо 👌', 'ready_to_subscribe')
+        ])
+    );
+} else {
+    const shuffled = shuffleArray(availableChannels);
+    const channel = shuffled[0];
+    user.currentChannel = channel.link;
+    ctx.reply(
+        `✨ Подпишитесь на канал: ${channel.link}`,
+        Markup.inlineKeyboard([ 
+            Markup.button.callback(
+                `Проверить подписку ✅`, 
+                `check_subscription_new_${encodeURIComponent(channel.link)}`
+            )
+        ])
+    );
+}
+
 
 // Обработчик нажатия на кнопку "Хорошо 🙂"
 bot.action('ready_to_subscribe', (ctx) => {
