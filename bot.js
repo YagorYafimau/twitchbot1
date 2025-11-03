@@ -346,7 +346,7 @@ bot.action('subscribe_more', (ctx) => {
         return arr;
     }
 
-   if (availableChannels.length === 0) {
+ if (availableChannels.length === 0) {
     ctx.reply(
         'На данный момент нет доступных каналов для подписки 😕 Попробуйте позже',
         Markup.inlineKeyboard([ 
@@ -357,16 +357,18 @@ bot.action('subscribe_more', (ctx) => {
     const shuffled = shuffleArray(availableChannels);
     const channel = shuffled[0];
     user.currentChannel = channel.link;
+
+    // Генерируем безопасный callback_data
+    const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
+
     ctx.reply(
         `✨ Подпишитесь на канал: ${channel.link}`,
         Markup.inlineKeyboard([ 
-            Markup.button.callback(
-                `Проверить подписку ✅`, 
-                `check_subscription_new_${encodeURIComponent(channel.link)}`
-            )
+            Markup.button.callback('Проверить подписку ✅', callbackData)
         ])
     );
 }
+
 
 
 // Обработчик нажатия на кнопку "Хорошо 🙂"
