@@ -358,8 +358,9 @@ bot.action('subscribe_more', (ctx) => {
         const channel = shuffled[0];
         user.currentChannel = channel.link;
 
-        // Генерируем безопасный callback_data
-const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
+// Используем индекс канала как идентификатор
+const channelIndex = channels.findIndex(ch => ch.link === channel.link);
+const callbackData = `check_subscription_new_${channelIndex}`;
 
 ctx.reply(
     `✨ Подпишитесь на канал: ${channel.link}`,
@@ -400,15 +401,16 @@ bot.action('ready_to_subscribe', (ctx) => {
 });
 
 // Обработчик нажатия на кнопку "Проверить подписку" для нового канала
-bot.action(/check_subscription_new_.+/, (ctx) => {
+bot.action(/check_subscription_new_(\d+)/, (ctx) => {
     const userId = ctx.from.id;
     const user = users.get(userId);
+    const channelIndex = Number(ctx.match[1]);
 
-    if (user) {
+    if (user && channels[channelIndex]) {
+        user.currentChannel = channels[channelIndex].link; // сохраняем ссылку на текущий канал
         ctx.reply('Пожалуйста, отправьте скриншот подтверждения подписки 📸');
-        user.step = 1; // Переход к ожиданию скриншота
+        user.step = 1;
 
-        // Устанавливаем таймер для сброса состояния
         setTimeout(() => resetUserState(userId), USER_STATE_TIMEOUT);
     }
 });
