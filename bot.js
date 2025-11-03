@@ -222,7 +222,10 @@ bot.on('photo', (ctx) => {
     const user = users.get(userId);
 
     if (user && user.step === 1) {
-        const photo = ctx.message.photo[0].file_id;
+        const photo = ctx.message.photo?.[0]?.file_id;
+if (!photo) {
+    return ctx.reply('⚠️ Фото не найдено. Пожалуйста, отправьте скриншот снова.');
+}
 
         // Получаем ссылку на канал, на который нужно подписаться
         const targetChannelLink = user.currentChannel;
