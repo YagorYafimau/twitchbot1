@@ -360,6 +360,9 @@ bot.action('subscribe_more', (ctx) => {
 
 // Используем индекс канала как идентификатор
 const channelIndex = channels.findIndex(ch => ch.link === channel.link);
+if (channelIndex === -1) {
+    return ctx.reply('Ошибка: канал не найден 😕 Попробуйте позже.');
+}
 const callbackData = `check_subscription_new_${channelIndex}`;
 
 ctx.reply(
@@ -406,13 +409,21 @@ bot.action(/check_subscription_new_(\d+)/, (ctx) => {
     const user = users.get(userId);
     const channelIndex = Number(ctx.match[1]);
 
-    if (user && channels[channelIndex]) {
-        user.currentChannel = channels[channelIndex].link; // сохраняем ссылку на текущий канал
-        ctx.reply('Пожалуйста, отправьте скриншот подтверждения подписки 📸');
-        user.step = 1;
+   bot.action(/check_subscription_new_(\d+)/, (ctx) => {
+    const userId = ctx.from.id;
+    const user = users.get(userId);
+    const channelIndex = Number(ctx.match[1]);
 
-        setTimeout(() => resetUserState(userId), USER_STATE_TIMEOUT);
+    if (!user) return ctx.reply('Ваши данные не найдены. Отправьте /start, чтобы начать заново.');
+    if (channelIndex < 0 || channelIndex >= channels.length) {
+        return ctx.reply('Ошибка: канал не найден 😕 Попробуйте позже.');
     }
+
+    user.currentChannel = channels[channelIndex].link; // сохраняем ссылку на текущий канал
+    ctx.reply('Пожалуйста, отправьте скриншот подтверждения подписки 📸');
+    user.step = 1;
+
+    setTimeout(() => resetUserState(userId), USER_STATE_TIMEOUT);
 });
 
 // Обработчик нажатия на кнопку "Прекратить"
