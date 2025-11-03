@@ -256,10 +256,18 @@ bot.action(/approve_(\d+)/, async (ctx) => {
             const targetChannel = channels.find(ch => ch.link === user.currentChannel);
             if (targetChannel) {
                 targetChannel.subscribersCount++;
+
+                // Уведомляем владельца канала, что на него кто-то подписался
+                try {
+                    await ctx.telegram.sendMessage(targetChannel.ownerId, `🎉 На ваш канал кто-то подписался!`);
+                } catch (err) {
+                    console.error(`Ошибка при отправке уведомления владельцу канала ${targetChannel.ownerId}:`, err);
+                }
             }
 
             // Сбрасываем текущий канал
             user.currentChannel = null;
+
 
             // Теперь показываем канал пользователя другим пользователям
             const allOtherUsers = [...users.values()].filter(u => u.twitch && u !== user);
