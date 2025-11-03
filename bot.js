@@ -338,7 +338,7 @@ bot.action('subscribe_more', (ctx) => {
 
     // Функция перемешивания массива (Fisher-Yates)
     function shuffleArray(array) {
-        const arr = [...array]; // Копируем, чтобы не менять оригинал
+        const arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -346,30 +346,29 @@ bot.action('subscribe_more', (ctx) => {
         return arr;
     }
 
- if (availableChannels.length === 0) {
-    ctx.reply(
-        'На данный момент нет доступных каналов для подписки 😕 Попробуйте позже',
-        Markup.inlineKeyboard([ 
-            Markup.button.callback('Хорошо 👌', 'ready_to_subscribe')
-        ])
-    );
-} else {
-    const shuffled = shuffleArray(availableChannels);
-    const channel = shuffled[0];
-    user.currentChannel = channel.link;
+    if (availableChannels.length === 0) {
+        ctx.reply(
+            'На данный момент нет доступных каналов для подписки 😕 Попробуйте позже',
+            Markup.inlineKeyboard([ 
+                Markup.button.callback('Хорошо 👌', 'ready_to_subscribe')
+            ])
+        );
+    } else {
+        const shuffled = shuffleArray(availableChannels);
+        const channel = shuffled[0];
+        user.currentChannel = channel.link;
 
-    // Генерируем безопасный callback_data
-    const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
+        // Генерируем безопасный callback_data
+        const callbackData = `check_subscription_new_${encodeURIComponent(channel.link)}`;
 
-    ctx.reply(
-        `✨ Подпишитесь на канал: ${channel.link}`,
-        Markup.inlineKeyboard([ 
-            Markup.button.callback('Проверить подписку ✅', callbackData)
-        ])
-    );
-}
-
-
+        ctx.reply(
+            `✨ Подпишитесь на канал: ${channel.link}`,
+            Markup.inlineKeyboard([ 
+                Markup.button.callback('Проверить подписку ✅', callbackData)
+            ])
+        );
+    }
+});
 
 // Обработчик нажатия на кнопку "Хорошо 🙂"
 bot.action('ready_to_subscribe', (ctx) => {
