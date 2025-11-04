@@ -483,11 +483,11 @@ bot.action('stop', (ctx) => {
 // Загружаем данные пользователей и каналов при запуске
 loadData();
 
-// Команда /broadcast для рассылки всем пользователям
+// Команда /broadcast для рассылки всем пользователям через админский чат
 bot.command('broadcast', async (ctx) => {
-    // Проверка, что команду отправил только владелец
-    if (ctx.from.id !== OWNER_ID) {
-        return ctx.reply('❌ У вас нет прав для этой команды.');
+    // Проверяем, что команда пришла из админского чата
+    if (ctx.chat.id.toString() !== ADMIN_CHAT_ID.replace('@', '')) {
+        return ctx.reply('❌ Команда /broadcast доступна только в админском чате.');
     }
 
     const text = ctx.message.text.replace('/broadcast', '').trim();
