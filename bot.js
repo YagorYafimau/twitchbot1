@@ -343,14 +343,9 @@ bot.action(/approve_(\d+)/, async (ctx) => {
                 const toShow = allOtherUsers.slice(0, remaining);
 
                 for (const [id, u] of toShow) {
-                    try {
-                        await ctx.telegram.sendMessage(id, `🔥 Новый канал для подписки: ${user.twitch}`);
-                        myChannel.shownTo.push(id);
-                    } catch (err) {
-                        console.error(`Ошибка при отправке пользователю ${id}:`, err);
-                    }
-                }
-
+    // Просто отмечаем, что пользователю показали канал
+    myChannel.shownTo.push(id);
+}
                 saveData();
             }
         }
