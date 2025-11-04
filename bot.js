@@ -182,12 +182,14 @@ bot.on('text', (ctx) => {
     if (isTwitchLink(message)) {
         // Сохраняем ссылку на Twitch канал
         users.set(userId, { 
-            twitch: message, 
-            subscribed: [], 
-            step: 0, 
-            subscribersCount: 0, // Количество подписчиков
-            viewsCount: 0 // Количество показов канала
-        });
+    twitch: message, 
+    subscribed: [], 
+    step: 0, 
+    subscribersCount: 0, // Количество подписчиков
+    viewsCount: 0, // Количество показов канала
+    banned: false // Новое поле — пользователь не забанен по умолчанию
+});
+
     // Добавляем канал в список
 channels.push({ 
     link: message, 
@@ -273,16 +275,18 @@ bot.on('photo', async (ctx) => {
         // Отправляем фото в админский чат с проверкой
         try {
             await ctx.telegram.sendPhoto(ADMIN_CHAT_ID, photo, {
-                caption: `Пользователь @${ctx.from.username || 'неизвестно'} (ID: ${userId}) отправил скриншот для подтверждения подписки.\n\nСсылка на Twitch канал пользователя: ${user.twitch || 'не указано'}\nСсылка на Twitch канал для подписки: ${targetChannelLink}`,
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            { text: 'Подтвердить ✅', callback_data: `approve_${userId}` },
-                            { text: 'Отклонить ❌', callback_data: `reject_${userId}` }
-                        ]
-                    ]
-                }
-            });
+    caption: `Пользователь @${ctx.from.username || 'неизвестно'} (ID: ${userId}) отправил скриншот для подтверждения подписки.\n\nСсылка на Twitch канал пользователя: ${user.twitch || 'не указано'}\nСсылка на Twitch канал для подписки: ${targetChannelLink}`,
+    reply_markup: {
+        inline_keyboard: [
+            [
+                { text: 'Подтвердить ✅', callback_data: `approve_${userId}` },
+                { text: 'Отклонить ❌', callback_data: `reject_${userId}` },
+                { text: 'Забанить 🚫', callback_data: `ban_${userId}` } // <-- добавляем кнопку бан
+            ]
+        ]
+    }
+});
+
         } catch (err) {
             console.error('Ошибка при отправке фото в админский чат:', err);
             return ctx.reply('⚠️ Не удалось отправить фото администратору. Попробуйте снова.');
@@ -379,10 +383,14 @@ bot.action(/reject_(\d+)/, (ctx) => {
 bot.action('subscribe_more', (ctx) => {
     const userId = ctx.from.id;
     const user = users.get(userId);
-
+    
     if (!user) {
         ctx.reply('Вы не зарегистрированы. Пожалуйста, отправьте ссылку на ваш Twitch канал');
         return;
+    }
+    // 🔒 Проверка, забанен ли пользователь
+    if (user.banned) {
+        return ctx.reply('🚫 Вы забанены и не можете подписываться на каналы.');
     }
 
     const availableChannels = getAvailableChannels(userId);
@@ -522,6 +530,51 @@ bot.command('broadcast', async (ctx) => {
 // Запуск бота
 bot.launch().then(() => {
     console.log('Бот запущен!');
+});
+
+// Забанить пользователя
+bot.action(/ban_(\d+)/, async (ctx) => {
+    const userId = Number(ctx.match[1]);
+    const user = users.get(userId);
+    if (!user) return;
+
+    user.banned = true;
+    user.step = 0; 
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(userId, '🚫 Вы забанены по причине недобросовестного поведения.');
+    } catch (err) {
+        console.error(`Ошибка отправки бан-уведомления пользователю ${userId}:`, err);
+    }
+
+    ctx.editMessageReplyMarkup({
+        inline_keyboard: [
+            [{ text: 'Разбанить ✅', callback_data: `unban_${userId}` }]
+        ]
+    });
+});
+
+// Разбанить пользователя
+bot.action(/unban_(\d+)/, async (ctx) => {
+    const userId = Number(ctx.match[1]);
+    const user = users.get(userId);
+    if (!user) return;
+
+    user.banned = false;
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(userId, '✅ Вы разбанены и снова можете пользоваться ботом.');
+    } catch (err) {
+        console.error(`Ошибка отправки разбан-уведомления пользователю ${userId}:`, err);
+    }
+
+    ctx.editMessageReplyMarkup({
+        inline_keyboard: [
+            [{ text: 'Забанить 🚫', callback_data: `ban_${userId}` }]
+        ]
+    });
 });
 
 // Автосохранение данных каждые 5 минут
