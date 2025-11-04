@@ -52,7 +52,12 @@ function loadData() {
                 });
             });
 
-            channels.push(...(data.channels || []));
+            channels.push(...(data.channels || []).map(ch => ({
+    link: ch.link,
+    ownerId: ch.ownerId,
+    subscribersCount: ch.subscribersCount || 0,
+    shownTo: ch.shownTo || []
+})));
             console.log('✅ Данные успешно загружены');
         } else {
             console.log('ℹ️ Файл с данными не найден, создается новый');
