@@ -183,13 +183,13 @@ bot.on('text', (ctx) => {
             subscribersCount: 0, // Количество подписчиков
             viewsCount: 0 // Количество показов канала
         });
-        // Добавляем канал в список
-        channels.push({ 
-            link: message, 
-            ownerId: userId, 
-            subscribersCount: 0 // Количество подписчиков канала
-        });
-
+    // Добавляем канал в список
+channels.push({ 
+    link: message, 
+    ownerId: userId, 
+    subscribersCount: 0, // Количество подписчиков канала
+    shownTo: [] // Кому уже показывали этот канал
+});
         ctx.reply(
             'Ссылка сохранена! Перед тем как начать, подпишитесь на мой Twitch канал 💖',
             Markup.inlineKeyboard([ 
@@ -318,31 +318,45 @@ bot.action(/approve_(\d+)/, async (ctx) => {
             user.currentChannel = null;
 
 
-            // Теперь показываем канал пользователя другим пользователям
-            const allOtherUsers = [...users.values()].filter(u => u.twitch && u !== user);
-            if (allOtherUsers.length > 0) {
-                // Перемешиваем список, чтобы был случайный порядок
-                for (let i = allOtherUsers.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [allOtherUsers[i], allOtherUsers[j]] = [allOtherUsers[j], allOtherUsers[i]];
-                }
+            // === Новый алгоритм показа канала ===
+const targetChannel = channels.find(ch => ch.ownerId === Number(userId));
+if (targetChannel) {
+    // Сколько раз уже показали
+    const alreadyShown = targetChannel.shownTo.length;
+    // Сколько раз должен быть показан максимум
+    const maxShows = user.subscribed.length;
 
-                // Берем столько пользователей, сколько у него подписок
-                const toShow = allOtherUsers.slice(0, user.subscribed.length);
+    // Если ещё можно показывать
+    if (alreadyShown < maxShows) {
+        // Выбираем пользователей, кому ещё не показывали этот канал
+        const allOtherUsers = [...users.entries()]
+            .filter(([id, u]) => id !== Number(userId) && u.twitch && !targetChannel.shownTo.includes(id));
 
-                // Отправляем им ссылку на его канал
-                for (const target of toShow) {
-                    try {
-                        await ctx.telegram.sendMessage(
-                            target.ownerId || target.id,
-                            `🔥 Новый канал для подписки: ${user.twitch}`
-                        );
-                    } catch (err) {
-                        console.error(`Ошибка при отправке пользователю ${target.ownerId || target.id}:`, err);
-                    }
-                }
+        // Перемешиваем случайно
+        for (let i = allOtherUsers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allOtherUsers[i], allOtherUsers[j]] = [allOtherUsers[j], allOtherUsers[i]];
+        }
+
+        // Берём столько, сколько можно ещё показать
+        const remaining = maxShows - alreadyShown;
+        const toShow = allOtherUsers.slice(0, remaining);
+
+        for (const [id, u] of toShow) {
+            try {
+                await ctx.telegram.sendMessage(
+                    id,
+                    `🔥 Новый канал для подписки: ${user.twitch}`
+                );
+                targetChannel.shownTo.push(id); // запоминаем, кому уже показали
+            } catch (err) {
+                console.error(`Ошибка при отправке пользователю ${id}:`, err);
             }
         }
+
+        saveData();
+    }
+}
 
         // Сообщение пользователю
         ctx.telegram.sendMessage(
