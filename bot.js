@@ -307,7 +307,28 @@ bot.action(/approve_(\d+)/, async (ctx) => {
 
     if (!user) return;
 
-    if (user.currentChannel) {
+// ✅ Если это первая подписка — на канал админа
+if (!user.currentChannel) {
+    await ctx.telegram.sendMessage(
+        userId,
+        `✅ Подписка подтверждена! Теперь вы можете подписываться на других пользователей.`,
+        Markup.inlineKeyboard([
+            Markup.button.callback('Начать подписываться 🚀', 'subscribe_more')
+        ])
+    );
+
+    await ctx.telegram.sendMessage(
+        ADMIN_CHAT_ID,
+        `✅ Пользователь @${ctx.from.username || 'без ника'} (ID: ${userId}) подтвердил подписку на канал администратора.`
+    );
+
+    user.step = 0;
+    saveData();
+    return; // выходим, чтобы дальше код не выполнялся
+}
+
+if (user.currentChannel) {
+
         // Добавляем канал, на который пользователь подписался
         user.subscribed.push(user.currentChannel);
 
