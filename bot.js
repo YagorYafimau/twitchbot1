@@ -169,9 +169,6 @@ bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text;
 
- // Внутри bot.on('text', (ctx) => { ... })
-if (message.startsWith('/broadcast') || message.startsWith('/start')) return;
-
     // Увеличиваем количество сообщений
     stats.messages++;
     saveStats(stats);
