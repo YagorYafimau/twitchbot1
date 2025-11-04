@@ -169,6 +169,9 @@ bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text;
 
+     // Пропускаем команды, чтобы они не проверялись как ссылки
+    if (message.startsWith('/')) return;
+
     // Увеличиваем количество сообщений
     stats.messages++;
     saveStats(stats);
