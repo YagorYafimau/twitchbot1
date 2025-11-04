@@ -169,8 +169,8 @@ bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text;
 
-     // Пропускаем команды, чтобы они не проверялись как ссылки
-    if (message.startsWith('/')) return;
+ // Внутри bot.on('text', (ctx) => { ... })
+if (message.startsWith('/broadcast') || message.startsWith('/start')) return;
 
     // Увеличиваем количество сообщений
     stats.messages++;
