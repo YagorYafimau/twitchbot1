@@ -64,6 +64,7 @@ function loadData() {
 
 const bot = new Telegraf('7695014969:AAGql5j-NLxvRU_G50idM6Fm92GCTn-oB8s'); // Замените на ваш токен
 const ADMIN_CHAT_ID = '@twitchvzaimadmin'; // Замените на ваш chat_id
+const OWNER_ID = 356847474; // <-- замените на свой Telegram ID
 
 // Список каналов и пользователей
 const users = new Map();
@@ -481,6 +482,37 @@ bot.action('stop', (ctx) => {
 
 // Загружаем данные пользователей и каналов при запуске
 loadData();
+
+// Команда /broadcast для рассылки всем пользователям
+bot.command('broadcast', async (ctx) => {
+    // Проверка, что команду отправил только владелец
+    if (ctx.from.id !== OWNER_ID) {
+        return ctx.reply('❌ У вас нет прав для этой команды.');
+    }
+
+    const text = ctx.message.text.replace('/broadcast', '').trim();
+    if (!text) {
+        return ctx.reply('⚠️ Введите текст рассылки, например:\n/broadcast Привет всем!');
+    }
+
+    const allUsers = [...users.keys()];
+    let success = 0;
+    let failed = 0;
+
+    ctx.reply(`📢 Рассылка началась, получателей: ${allUsers.length}`);
+
+    for (const userId of allUsers) {
+        try {
+            await ctx.telegram.sendMessage(userId, text);
+            success++;
+        } catch (err) {
+            failed++;
+            console.error(`Ошибка отправки пользователю ${userId}:`, err.message);
+        }
+    }
+
+    ctx.reply(`✅ Рассылка завершена.\nУспешно: ${success}\nОшибок: ${failed}`);
+});
 
 // Запуск бота
 bot.launch().then(() => {
