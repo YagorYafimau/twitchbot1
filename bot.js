@@ -318,27 +318,21 @@ bot.action(/approve_(\d+)/, async (ctx) => {
             user.currentChannel = null;
 
 
-            // === Новый алгоритм показа канала ===
-const targetChannel = channels.find(ch => ch.ownerId === Number(userId));
-if (targetChannel) {
-    // Сколько раз уже показали
-    const alreadyShown = targetChannel.shownTo.length;
-    // Сколько раз должен быть показан максимум
+     // === Новый алгоритм показа канала ===
+const myChannel = channels.find(ch => ch.ownerId === Number(userId));
+if (myChannel) {
+    const alreadyShown = myChannel.shownTo.length;
     const maxShows = user.subscribed.length;
 
-    // Если ещё можно показывать
     if (alreadyShown < maxShows) {
-        // Выбираем пользователей, кому ещё не показывали этот канал
         const allOtherUsers = [...users.entries()]
-            .filter(([id, u]) => id !== Number(userId) && u.twitch && !targetChannel.shownTo.includes(id));
+            .filter(([id, u]) => id !== Number(userId) && u.twitch && !myChannel.shownTo.includes(id));
 
-        // Перемешиваем случайно
         for (let i = allOtherUsers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [allOtherUsers[i], allOtherUsers[j]] = [allOtherUsers[j], allOtherUsers[i]];
         }
 
-        // Берём столько, сколько можно ещё показать
         const remaining = maxShows - alreadyShown;
         const toShow = allOtherUsers.slice(0, remaining);
 
@@ -348,7 +342,7 @@ if (targetChannel) {
                     id,
                     `🔥 Новый канал для подписки: ${user.twitch}`
                 );
-                targetChannel.shownTo.push(id); // запоминаем, кому уже показали
+                myChannel.shownTo.push(id);
             } catch (err) {
                 console.error(`Ошибка при отправке пользователю ${id}:`, err);
             }
@@ -357,7 +351,6 @@ if (targetChannel) {
         saveData();
     }
 }
-
         // Сообщение пользователю
         ctx.telegram.sendMessage(
             userId,
