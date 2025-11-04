@@ -293,66 +293,65 @@ bot.on('photo', async (ctx) => {
 
 // Обработчик подтверждения/отклонения подписки администратором
 bot.action(/approve_(\d+)/, async (ctx) => {
-    const userId = ctx.match[1];
-    const user = users.get(Number(userId));
+    const userId = Number(ctx.match[1]);
+    const user = users.get(userId);
 
-    if (user) {
-        if (user.currentChannel) {
-            // Добавляем канал, на который пользователь подписался
-            user.subscribed.push(user.currentChannel);
+    if (!user) return;
 
-            // Увеличиваем счетчик подписчиков у этого канала
-            const targetChannel = channels.find(ch => ch.link === user.currentChannel);
-            if (targetChannel) {
-                targetChannel.subscribersCount++;
+    if (user.currentChannel) {
+        // Добавляем канал, на который пользователь подписался
+        user.subscribed.push(user.currentChannel);
 
-                // Уведомляем владельца канала, что на него кто-то подписался
-                try {
-                    await ctx.telegram.sendMessage(targetChannel.ownerId, `🎉 На ваш канал кто-то подписался!`);
-                } catch (err) {
-                    console.error(`Ошибка при отправке уведомления владельцу канала ${targetChannel.ownerId}:`, err);
-                }
-            }
+        // Увеличиваем счетчик подписчиков у этого канала
+        const targetChannel = channels.find(ch => ch.link === user.currentChannel);
+        if (targetChannel) {
+            targetChannel.subscribersCount++;
 
-            // Сбрасываем текущий канал
-            user.currentChannel = null;
-
-
-     // === Новый алгоритм показа канала ===
-const myChannel = channels.find(ch => ch.ownerId === Number(userId));
-if (myChannel) {
-    const alreadyShown = myChannel.shownTo.length;
-    const maxShows = user.subscribed.length;
-
-    if (alreadyShown < maxShows) {
-        const allOtherUsers = [...users.entries()]
-            .filter(([id, u]) => id !== Number(userId) && u.twitch && !myChannel.shownTo.includes(id));
-
-        for (let i = allOtherUsers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [allOtherUsers[i], allOtherUsers[j]] = [allOtherUsers[j], allOtherUsers[i]];
-        }
-
-        const remaining = maxShows - alreadyShown;
-        const toShow = allOtherUsers.slice(0, remaining);
-
-        for (const [id, u] of toShow) {
+            // Уведомляем владельца канала, что на него кто-то подписался
             try {
-                await ctx.telegram.sendMessage(
-                    id,
-                    `🔥 Новый канал для подписки: ${user.twitch}`
-                );
-                myChannel.shownTo.push(id);
+                await ctx.telegram.sendMessage(targetChannel.ownerId, `🎉 На ваш канал кто-то подписался!`);
             } catch (err) {
-                console.error(`Ошибка при отправке пользователю ${id}:`, err);
+                console.error(`Ошибка при отправке владельцу канала ${targetChannel.ownerId}:`, err);
             }
         }
 
-        saveData();
-    }
-}
+        // Сбрасываем текущий канал
+        user.currentChannel = null;
+
+        // === Новый алгоритм показа канала ===
+        const myChannel = channels.find(ch => ch.ownerId === userId);
+        if (myChannel) {
+            const alreadyShown = myChannel.shownTo.length;
+            const maxShows = user.subscribed.length;
+
+            if (alreadyShown < maxShows) {
+                const allOtherUsers = [...users.entries()]
+                    .filter(([id, u]) => id !== userId && u.twitch && !myChannel.shownTo.includes(id));
+
+                // Перемешиваем случайно
+                for (let i = allOtherUsers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allOtherUsers[i], allOtherUsers[j]] = [allOtherUsers[j], allOtherUsers[i]];
+                }
+
+                const remaining = maxShows - alreadyShown;
+                const toShow = allOtherUsers.slice(0, remaining);
+
+                for (const [id, u] of toShow) {
+                    try {
+                        await ctx.telegram.sendMessage(id, `🔥 Новый канал для подписки: ${user.twitch}`);
+                        myChannel.shownTo.push(id);
+                    } catch (err) {
+                        console.error(`Ошибка при отправке пользователю ${id}:`, err);
+                    }
+                }
+
+                saveData();
+            }
+        }
+
         // Сообщение пользователю
-        ctx.telegram.sendMessage(
+        await ctx.telegram.sendMessage(
             userId,
             `Подписка на канал подтверждена! 🙌`,
             Markup.inlineKeyboard([
@@ -361,10 +360,9 @@ if (myChannel) {
             ])
         );
 
-        ctx.reply('Подписка подтверждена.');
+        await ctx.reply('Подписка подтверждена.');
     }
 });
-
 
 bot.action(/reject_(\d+)/, (ctx) => {
     const userId = ctx.match[1];
