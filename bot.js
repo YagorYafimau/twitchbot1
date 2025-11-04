@@ -7,19 +7,52 @@ const DATA_FILE = 'data.json';
 // Сохраняем данные пользователей и каналов в файл
 function saveData() {
     const data = {
-        users: Array.from(users.entries()),
+        users: Array.from(users.entries()).map(([id, user]) => [id, {
+            twitch: user.twitch,
+            subscribed: user.subscribed,
+            step: user.step,
+            subscribersCount: user.subscribersCount,
+            viewsCount: user.viewsCount,
+            currentChannel: user.currentChannel || null
+        }]),
         channels: channels
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
 // Загружаем данные при запуске
+function saveData() {
+    const data = {
+        users: Array.from(users.entries()).map(([id, user]) => [id, {
+            twitch: user.twitch,
+            subscribed: user.subscribed,
+            step: user.step,
+            subscribersCount: user.subscribersCount,
+            viewsCount: user.viewsCount,
+            currentChannel: user.currentChannel || null
+        }]),
+        channels: channels
+    };
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const data = JSON.parse(fs.readFileSync(DATA_FILE));
-            data.users.forEach(([id, user]) => users.set(Number(id), user));
-            channels.push(...data.channels);
+
+            data.users.forEach(([id, user]) => {
+                users.set(Number(id), {
+                    twitch: user.twitch || null,
+                    subscribed: user.subscribed || [],
+                    step: user.step || 0,
+                    subscribersCount: user.subscribersCount || 0,
+                    viewsCount: user.viewsCount || 0,
+                    currentChannel: user.currentChannel || null
+                });
+            });
+
+            channels.push(...(data.channels || []));
             console.log('✅ Данные успешно загружены');
         } else {
             console.log('ℹ️ Файл с данными не найден, создается новый');
@@ -28,7 +61,6 @@ function loadData() {
         console.error('Ошибка при загрузке данных:', err);
     }
 }
-
 
 const bot = new Telegraf('7695014969:AAGql5j-NLxvRU_G50idM6Fm92GCTn-oB8s'); // Замените на ваш токен
 const ADMIN_CHAT_ID = '@twitchvzaimadmin'; // Замените на ваш chat_id
