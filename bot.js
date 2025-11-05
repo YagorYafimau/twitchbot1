@@ -26,16 +26,17 @@ function loadData() {
             const data = JSON.parse(fs.readFileSync(DATA_FILE));
 
             data.users.forEach(([id, user]) => {
-                users.set(Number(id), {
-                    twitch: user.twitch || null,
-                    subscribed: user.subscribed || [],
-                    step: user.step || 0,
-                    subscribersCount: user.subscribersCount || 0,
-                    viewsCount: user.viewsCount || 0,
-                    currentChannel: user.currentChannel || null
-                    banned: user.banned || false
-                });
-            });
+    users.set(Number(id), {
+        twitch: user.twitch || null,
+        subscribed: user.subscribed || [],
+        step: user.step || 0,
+        subscribersCount: user.subscribersCount || 0,
+        viewsCount: user.viewsCount || 0,
+        currentChannel: user.currentChannel || null, // <-- запятая тут
+        banned: user.banned || false
+    });
+});
+
 
             channels.push(...(data.channels || []).map(ch => ({
     link: ch.link,
