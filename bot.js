@@ -55,6 +55,16 @@ const bot = new Telegraf('7695014969:AAGql5j-NLxvRU_G50idM6Fm92GCTn-oB8s'); // �
 const ADMIN_CHAT_ID = '@twitchvzaimadmin'; // Замените на ваш chat_id
 const OWNER_ID = 356847474; // <-- замените на свой Telegram ID
 
+// Проверка, забанен ли пользователь
+function checkBanned(ctx, userId) {
+    const user = users.get(userId);
+    if (user && user.banned) {
+        ctx.answerCbQuery('🚫 Вы забанены и не можете пользоваться ботом.', { show_alert: true });
+        return true; // пользователь забанен
+    }
+    return false; // пользователь не забанен
+}
+
 // Список каналов и пользователей
 const users = new Map();
 const channels = []; // Список каналов с ссылкой, ownerId и количеством подписчиков
@@ -285,9 +295,9 @@ bot.action('check_subscription', (ctx) => {
     const userId = ctx.from.id;
     const user = users.get(userId);
 
-    if (!user) {
-        return ctx.reply('⚠️ Ваши данные не найдены. Отправьте /start чтобы начать заново.');
-    }
+    if (!user) return ctx.reply('⚠️ Ваши данные не найдены. Отправьте /start чтобы начать заново.');
+    if (checkBanned(ctx, userId)) return; // проверяем бан
+
 
     if (user.step === 0) {
         ctx.reply('Пожалуйста, отправьте скриншот подтверждения подписки 📸');
@@ -307,9 +317,7 @@ bot.on('photo', async (ctx) => {
         if (!user) return;
 
         // 🚫 Проверяем бан
-        if (user.banned) {
-            return ctx.reply('🚫 Вы забанены и не можете отправлять скриншоты.');
-        }
+        if (checkBanned(ctx, userId)) return;
 
         if (user.step !== 1) return;
 
@@ -457,10 +465,8 @@ bot.action('subscribe_more', (ctx) => {
         ctx.reply('Вы не зарегистрированы. Пожалуйста, отправьте ссылку на ваш Twitch канал');
         return;
     }
-    // 🔒 Проверка, забанен ли пользователь
-    if (user.banned) {
-        return ctx.reply('🚫 Вы забанены и не можете подписываться на каналы.');
-    }
+    
+    if (checkBanned(ctx, userId)) return;
 
     const availableChannels = getAvailableChannels(userId);
 
@@ -538,6 +544,8 @@ bot.action(/check_subscription_new_(\d+)/, (ctx) => {
     const channelIndex = Number(ctx.match[1]);
 
     if (!user) return ctx.reply('Ваши данные не найдены. Отправьте /start, чтобы начать заново.');
+    if (checkBanned(ctx, userId)) return; // проверка бана
+
     if (channelIndex < 0 || channelIndex >= channels.length) {
         return ctx.reply('Ошибка: канал не найден 😕 Попробуйте позже.');
     }
