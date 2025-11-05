@@ -155,9 +155,67 @@ function isTwitchLink(url) {
 }
 
 // Обработчик текста
-bot.on('text', (ctx) => {
+    bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text.trim();
+
+        // --- Команды админа ---
+    if (message.startsWith('/broadcast')) {
+        if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+        const text = message.replace('/broadcast', '').trim();
+        if (!text) return ctx.reply('⚠️ Используйте: /broadcast <текст>');
+
+        const allUsers = [...users.keys()];
+        let success = 0, failed = 0;
+        await ctx.reply(`📢 Рассылка началась, получателей: ${allUsers.length}`);
+
+        for (const uid of allUsers) {
+            try {
+                await ctx.telegram.sendMessage(uid, text);
+                success++;
+            } catch {
+                failed++;
+            }
+        }
+
+        return ctx.reply(`✅ Рассылка завершена.\nУспешно: ${success}\nОшибок: ${failed}`);
+    }
+
+    if (message.startsWith('/reset_user')) {
+        if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+        const parts = message.split(' ');
+        const targetId = Number(parts[1]);
+        if (!targetId) return ctx.reply('⚠️ Используйте: /reset_user <user_id>');
+
+        const user = users.get(targetId);
+        if (!user) return ctx.reply(`⚠️ Пользователь с ID ${targetId} не найден.`);
+
+        const channelIndex = channels.findIndex(ch => ch.ownerId === targetId);
+        if (channelIndex !== -1) channels.splice(channelIndex, 1);
+
+        users.set(targetId, {
+            twitch: null,
+            subscribed: [],
+            step: 0,
+            subscribersCount: 0,
+            viewsCount: 0,
+            currentChannel: null,
+            banned: false
+        });
+
+        saveData();
+
+        try {
+            await ctx.telegram.sendMessage(
+                targetId,
+                '♻️ Ваш профиль был сброшен администратором. Отправьте ссылку на ваш Twitch канал 📺'
+            );
+        } catch {}
+
+        return ctx.reply(`✅ Профиль пользователя ${targetId} сброшен.`);
+    }
 
     const user = users.get(userId);
     if (user && user.banned) {
