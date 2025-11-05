@@ -183,39 +183,32 @@ function isTwitchLink(url) {
     }
 
     if (message.startsWith('/reset_user')) {
-        if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+    if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
 
-        const parts = message.split(' ');
-        const targetId = Number(parts[1]);
-        if (!targetId) return ctx.reply('⚠️ Используйте: /reset_user <user_id>');
+    const parts = message.split(' ');
+    const targetId = Number(parts[1]);
+    if (!targetId) return ctx.reply('⚠️ Используйте: /reset_user <user_id>');
 
-        const user = users.get(targetId);
-        if (!user) return ctx.reply(`⚠️ Пользователь с ID ${targetId} не найден.`);
+    const user = users.get(targetId);
+    if (!user) return ctx.reply(`⚠️ Пользователь с ID ${targetId} не найден.`);
 
-        const channelIndex = channels.findIndex(ch => ch.ownerId === targetId);
-        if (channelIndex !== -1) channels.splice(channelIndex, 1);
+    // Удаляем канал пользователя из списка
+    const channelIndex = channels.findIndex(ch => ch.ownerId === targetId);
+    if (channelIndex !== -1) channels.splice(channelIndex, 1);
 
-        users.set(targetId, {
-            twitch: null,
-            subscribed: [],
-            step: 0,
-            subscribersCount: 0,
-            viewsCount: 0,
-            currentChannel: null,
-            banned: false
-        });
+    // Удаляем самого пользователя
+    users.delete(targetId);
+    saveData();
 
-        saveData();
+    try {
+        await ctx.telegram.sendMessage(
+            targetId,
+            '♻️ Ваш профиль был сброшен администратором. Отправьте ссылку на ваш Twitch канал 📺'
+        );
+    } catch {}
 
-        try {
-            await ctx.telegram.sendMessage(
-                targetId,
-                '♻️ Ваш профиль был сброшен администратором. Отправьте ссылку на ваш Twitch канал 📺'
-            );
-        } catch {}
-
-        return ctx.reply(`✅ Профиль пользователя ${targetId} сброшен.`);
-    }
+    return ctx.reply(`✅ Профиль пользователя ${targetId} полностью сброшен.`);
+}
 
     const user = users.get(userId);
     if (user && user.banned) {
@@ -599,16 +592,8 @@ bot.command('reset_user', async (ctx) => {
         channels.splice(channelIndex, 1);
     }
 
-    // Обнуляем данные пользователя
-    users.set(userId, {
-        twitch: null,
-        subscribed: [],
-        step: 0,
-        subscribersCount: 0,
-        viewsCount: 0,
-        currentChannel: null,
-        banned: false
-    });
+   // Полностью удаляем пользователя
+users.delete(userId);
 
     // Сохраняем изменения
     saveData();
