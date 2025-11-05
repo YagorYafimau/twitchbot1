@@ -175,7 +175,7 @@ bot.on('text', (ctx) => {
     const message = ctx.message.text.trim();
 
     // 🚫 Игнорируем все команды, начинающиеся с "/"
-    if (message.startsWith('/')) return;
+    if (message.startsWith('/') && !ctx.message.entities?.some(e => e.type === 'bot_command')) return;
 
     const user = users.get(userId);
     if (user && user.banned) {
@@ -584,11 +584,10 @@ bot.command('reset_user', async (ctx) => {
     ctx.reply(`✅ Профиль пользователя ${userId} успешно сброшен.`);
 });
 
-// Команда /broadcast для рассылки всем пользователям через админский чат
+// Команда /broadcast — рассылка всем пользователям (только админ)
 bot.command('broadcast', async (ctx) => {
-    // Проверяем, что команда пришла из админского чата
-    if (ctx.chat.id.toString() !== ADMIN_CHAT_ID.replace('@', '')) {
-        return ctx.reply('❌ Команда /broadcast доступна только в админском чате.');
+    if (ctx.from.id !== OWNER_ID) {
+        return ctx.reply('❌ У вас нет прав для этой команды.');
     }
 
     const text = ctx.message.text.replace('/broadcast', '').trim();
