@@ -621,6 +621,78 @@ users.delete(userId);
     ctx.reply(`✅ Профиль пользователя ${userId} успешно сброшен.`);
 });
 
+// --- НАЧАЛО: команды /ban и /unban (только для администратора) ---
+/*
+  /ban <user_id>   — поставить бан пользователю (сохраняется в users и на диск)
+  /unban <user_id> — снять бан у пользователя
+  Если пользователь не зарегистрирован — создаётся заглушка в users с banned: true/false
+*/
+bot.command('ban', async (ctx) => {
+    if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+    const parts = ctx.message.text.split(' ').filter(Boolean);
+    if (parts.length < 2) return ctx.reply('⚠️ Используйте: /ban <user_id>');
+
+    const targetId = Number(parts[1]);
+    if (!targetId) return ctx.reply('⚠️ Неверный ID. Используйте: /ban <user_id>');
+
+    // Если у пользователя ещё нет записи — создаём базовую
+    let targetUser = users.get(targetId);
+    if (!targetUser) {
+        targetUser = {
+            twitch: null,
+            subscribed: [],
+            step: 0,
+            subscribersCount: 0,
+            viewsCount: 0,
+            currentChannel: null,
+            banned: true
+        };
+        users.set(targetId, targetUser);
+    } else {
+        targetUser.banned = true;
+        targetUser.step = 0;
+    }
+
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(targetId, '🚫 Вы забанены администратором и не можете пользоваться ботом.');
+    } catch (err) {
+        // пользователь мог заблокировать бота — игнорируем ошибку
+    }
+
+    return ctx.reply(`✅ Пользователь ${targetId} забанен.`);
+});
+
+bot.command('unban', async (ctx) => {
+    if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+    const parts = ctx.message.text.split(' ').filter(Boolean);
+    if (parts.length < 2) return ctx.reply('⚠️ Используйте: /unban <user_id>');
+
+    const targetId = Number(parts[1]);
+    if (!targetId) return ctx.reply('⚠️ Неверный ID. Используйте: /unban <user_id>');
+
+    const targetUser = users.get(targetId);
+    if (!targetUser) {
+        return ctx.reply(`⚠️ Пользователь с ID ${targetId} не найден.`);
+    }
+
+    targetUser.banned = false;
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(targetId, '✅ Вас разбанил администратор. Можете продолжать пользоваться ботом.');
+    } catch (err) {
+        // игнорируем ошибки отправки
+    }
+
+    return ctx.reply(`✅ Пользователь ${targetId} разбанен.`);
+});
+// --- КОНЕЦ: команды /ban и /unban ---
+
+
 // Команда /broadcast — рассылка всем пользователям (только админ)
 bot.command('broadcast', async (ctx) => {
     console.log('COMMAND /broadcast от ID:', ctx.from.id);
