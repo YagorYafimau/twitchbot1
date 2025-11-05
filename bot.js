@@ -175,8 +175,8 @@ bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text.trim();
 
-    // 🚫 Игнорируем все команды, начинающиеся с "/"
-    if (message.startsWith('/')) return;
+    // Игнорируем только команды Telegram, чтобы они срабатывали через bot.command()
+    if (ctx.message.entities?.some(e => e.type === 'bot_command')) return;
 
     const user = users.get(userId);
     if (user && user.banned) {
