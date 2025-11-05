@@ -172,11 +172,15 @@ function isTwitchLink(url) {
 // Обработчик текста
 bot.on('text', (ctx) => {
     const userId = ctx.from.id;
-    const message = ctx.message.text;
+    const message = ctx.message.text.trim();
+
+    // 🚫 Игнорируем все команды, начинающиеся с "/"
+    if (message.startsWith('/')) return;
+
     const user = users.get(userId);
-if (user && user.banned) {
-    return ctx.reply('🚫 Вы забанены и не можете пользоваться ботом.');
-}
+    if (user && user.banned) {
+        return ctx.reply('🚫 Вы забанены и не можете пользоваться ботом.');
+    }
 
     // Увеличиваем количество сообщений
     stats.messages++;
