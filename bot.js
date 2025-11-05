@@ -159,11 +159,6 @@ bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text.trim();
 
-    // Игнорируем только команды Telegram, чтобы они срабатывали через bot.command()
-    if (ctx.message.entities?.some(e => e.type === 'bot_command')) {
-    return; // просто выходим, команды будут обрабатываться через bot.command
-}
-
     const user = users.get(userId);
     if (user && user.banned) {
         return ctx.reply('🚫 Вы забанены и не можете пользоваться ботом.');
