@@ -33,6 +33,7 @@ function loadData() {
                     subscribersCount: user.subscribersCount || 0,
                     viewsCount: user.viewsCount || 0,
                     currentChannel: user.currentChannel || null
+                    banned: user.banned || false
                 });
             });
 
