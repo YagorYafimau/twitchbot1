@@ -173,6 +173,10 @@ function isTwitchLink(url) {
 bot.on('text', (ctx) => {
     const userId = ctx.from.id;
     const message = ctx.message.text;
+    const user = users.get(userId);
+if (user && user.banned) {
+    return ctx.reply('🚫 Вы забанены и не можете пользоваться ботом.');
+}
 
     // Увеличиваем количество сообщений
     stats.messages++;
@@ -263,7 +267,14 @@ bot.on('photo', async (ctx) => {
         if (!userId) return;
 
         const user = users.get(userId);
-        if (!user || user.step !== 1) return;
+        if (!user) return;
+
+        // 🚫 Проверяем бан
+        if (user.banned) {
+            return ctx.reply('🚫 Вы забанены и не можете отправлять скриншоты.');
+        }
+
+        if (user.step !== 1) return;
 
         const photo = ctx.message?.photo?.[0]?.file_id;
         if (!photo) {
