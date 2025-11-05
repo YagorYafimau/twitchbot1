@@ -222,6 +222,64 @@ function isTwitchLink(url) {
     return ctx.reply(`✅ Профиль пользователя ${targetId} полностью сброшен.`);
 }
 
+// --- Команды /ban и /unban ---
+if (message.startsWith('/ban')) {
+    if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+    const parts = message.split(' ').filter(Boolean);
+    if (parts.length < 2) return ctx.reply('⚠️ Используйте: /ban <user_id>');
+
+    const targetId = Number(parts[1]);
+    if (!targetId) return ctx.reply('⚠️ Неверный ID. Используйте: /ban <user_id>');
+
+    let targetUser = users.get(targetId);
+    if (!targetUser) {
+        targetUser = {
+            twitch: null,
+            subscribed: [],
+            step: 0,
+            subscribersCount: 0,
+            viewsCount: 0,
+            currentChannel: null,
+            banned: true
+        };
+        users.set(targetId, targetUser);
+    } else {
+        targetUser.banned = true;
+        targetUser.step = 0;
+    }
+
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(targetId, '🚫 Вы забанены администратором и не можете пользоваться ботом.');
+    } catch {}
+
+    return ctx.reply(`✅ Пользователь ${targetId} забанен.`);
+}
+
+if (message.startsWith('/unban')) {
+    if (ctx.from.id !== OWNER_ID) return ctx.reply('❌ У вас нет прав для этой команды.');
+
+    const parts = message.split(' ').filter(Boolean);
+    if (parts.length < 2) return ctx.reply('⚠️ Используйте: /unban <user_id>');
+
+    const targetId = Number(parts[1]);
+    if (!targetId) return ctx.reply('⚠️ Неверный ID. Используйте: /unban <user_id>');
+
+    const targetUser = users.get(targetId);
+    if (!targetUser) return ctx.reply(`⚠️ Пользователь с ID ${targetId} не найден.`);
+
+    targetUser.banned = false;
+    saveData();
+
+    try {
+        await ctx.telegram.sendMessage(targetId, '✅ Вас разбанил администратор. Можете продолжать пользоваться ботом.');
+    } catch {}
+
+    return ctx.reply(`✅ Пользователь ${targetId} разбанен.`);
+}
+        
     const user = users.get(userId);
     if (user && user.banned) {
         return ctx.reply('🚫 Вы забанены и не можете пользоваться ботом.');
