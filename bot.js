@@ -176,7 +176,7 @@ bot.on('text', (ctx) => {
     const message = ctx.message.text.trim();
 
     // 🚫 Игнорируем все команды, начинающиеся с "/"
-    if (message.startsWith('/') && !ctx.message.entities?.some(e => e.type === 'bot_command')) return;
+    if (message.startsWith('/')) return;
 
     const user = users.get(userId);
     if (user && user.banned) {
