@@ -437,6 +437,7 @@ if (!user.currentChannel) {
         ADMIN_CHAT_ID,
         `✅ Пользователь @${ctx.from.username || 'без ника'} (ID: ${userId}) подтвердил подписку на канал администратора.`
     );
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
     user.step = 0;
     saveData();
@@ -514,6 +515,7 @@ bot.action(/reject_(\d+)/, (ctx) => {
         user.step = 1; // Возврат к ожиданию скриншота
         ctx.reply('Подписка отклонена.');
     }
+    ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 });
 
 // Обработчик нажатия на кнопку "Подписаться еще"
@@ -804,11 +806,7 @@ bot.action(/ban_(\d+)/, async (ctx) => {
         console.error(`Ошибка отправки бан-уведомления пользователю ${userId}:`, err);
     }
 
-    ctx.editMessageReplyMarkup({
-        inline_keyboard: [
-            [{ text: 'Разбанить ✅', callback_data: `unban_${userId}` }]
-        ]
-    });
+   await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 });
 
 // Разбанить пользователя
@@ -826,11 +824,7 @@ bot.action(/unban_(\d+)/, async (ctx) => {
         console.error(`Ошибка отправки разбан-уведомления пользователю ${userId}:`, err);
     }
 
-    ctx.editMessageReplyMarkup({
-        inline_keyboard: [
-            [{ text: 'Забанить 🚫', callback_data: `ban_${userId}` }]
-        ]
-    });
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 });
 
 // Автосохранение данных каждые 5 минут
