@@ -20,22 +20,6 @@ function saveData() {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// Загружаем данные при запуске
-function saveData() {
-    const data = {
-        users: Array.from(users.entries()).map(([id, user]) => [id, {
-            twitch: user.twitch,
-            subscribed: user.subscribed,
-            step: user.step,
-            subscribersCount: user.subscribersCount,
-            viewsCount: user.viewsCount,
-            currentChannel: user.currentChannel || null
-        }]),
-        channels: channels
-    };
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
@@ -176,8 +160,8 @@ bot.on('text', (ctx) => {
     const message = ctx.message.text.trim();
 
     // Игнорируем только команды Telegram, чтобы они срабатывали через bot.command()
-    if (ctx.message.entities?.some(e => e.type === 'bot_command' && ctx.message.text.startsWith('/'))) {
-    return; // команды не будут обрабатываться здесь, но bot.command сработает
+    if (ctx.message.entities?.some(e => e.type === 'bot_command')) {
+    return; // просто выходим, команды будут обрабатываться через bot.command
 }
 
     const user = users.get(userId);
