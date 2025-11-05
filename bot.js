@@ -154,15 +154,16 @@ bot.start((ctx) => {
 // Функция для проверки ссылки на Twitch
 function isTwitchLink(url) {
     try {
+        if (!url.startsWith('http')) {
+            url = 'https://' + url; // добавляем https если юзер забыл
+        }
         const parsed = new URL(url.trim());
         const hostnameValid =
             parsed.hostname === 'www.twitch.tv' ||
             parsed.hostname === 'twitch.tv' ||
-            parsed.hostname === 'm.twitch.tv'; // поддержка мобильных ссылок
-
-        const pathValid =
-            parsed.pathname.length > 1 && !parsed.pathname.includes('/', 2);
-
+            parsed.hostname === 'm.twitch.tv';
+        const pathSegments = parsed.pathname.split('/').filter(Boolean); // убираем пустые сегменты
+        const pathValid = pathSegments.length === 1; // только один сегмент — ник
         return hostnameValid && pathValid;
     } catch {
         return false;
