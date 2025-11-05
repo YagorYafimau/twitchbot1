@@ -521,6 +521,8 @@ loadData();
 
 // Команда /reset_user — сбрасывает данные конкретного пользователя
 bot.command('reset_user', async (ctx) => {
+    console.log('COMMAND /reset_user от ID:', ctx.from.id);
+    await ctx.reply(`Ваш ID: ${ctx.from.id}`); // Временно выводим ID
     // Проверяем, что команду вызвал владелец бота (админ)
     if (ctx.from.id !== OWNER_ID) {
         return ctx.reply('❌ У вас нет прав для этой команды.');
@@ -573,6 +575,8 @@ bot.command('reset_user', async (ctx) => {
 
 // Команда /broadcast — рассылка всем пользователям (только админ)
 bot.command('broadcast', async (ctx) => {
+    console.log('COMMAND /broadcast от ID:', ctx.from.id);
+    await ctx.reply(`Ваш ID: ${ctx.from.id}`); // Временно выводим ID
     if (ctx.from.id !== OWNER_ID) {
         return ctx.reply('❌ У вас нет прав для этой команды.');
     }
