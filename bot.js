@@ -424,7 +424,15 @@ bot.action(/approve_(\d+)/, async (ctx) => {
     if (!user) return;
 
         // Убираем кнопки в админском сообщении
+    try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+} catch (err) {
+    if (err.description && err.description.includes('message is not modified')) {
+        // кнопки уже были убраны — не критично
+    } else {
+        console.error('Ошибка при удалении кнопок:', err);
+    }
+}
 
 // ✅ Если это первая подписка — на канал админа
 if (!user.currentChannel) {
@@ -440,7 +448,15 @@ if (!user.currentChannel) {
         ADMIN_CHAT_ID,
         `✅ Пользователь @${ctx.from.username || 'без ника'} (ID: ${userId}) подтвердил подписку на канал администратора.`
     );
+    try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+} catch (err) {
+    if (err.description && err.description.includes('message is not modified')) {
+        // кнопки уже были убраны — не критично
+    } else {
+        console.error('Ошибка при удалении кнопок:', err);
+    }
+}
 
     user.step = 0;
     saveData();
@@ -514,7 +530,15 @@ bot.action(/reject_(\d+)/, async (ctx) => {
     const user = users.get(userId);
 
     // Убираем кнопки сразу
+    try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+} catch (err) {
+    if (err.description && err.description.includes('message is not modified')) {
+        // кнопки уже были убраны — не критично
+    } else {
+        console.error('Ошибка при удалении кнопок:', err);
+    }
+}
 
     if (user) {
         await ctx.telegram.sendMessage(userId, '❌ Подписка не подтверждена, пожалуйста, отправьте скриншот снова 📸');
@@ -798,7 +822,15 @@ bot.launch().then(() => {
 // Забанить пользователя
 bot.action(/ban_(\d+)/, async (ctx) => {
     // Убираем кнопки в админском сообщении
+    try {
     await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+} catch (err) {
+    if (err.description && err.description.includes('message is not modified')) {
+        // кнопки уже были убраны — не критично
+    } else {
+        console.error('Ошибка при удалении кнопок:', err);
+    }
+}
 
     const userId = Number(ctx.match[1]);
     const user = users.get(userId);
@@ -830,7 +862,16 @@ bot.action(/unban_(\d+)/, async (ctx) => {
         console.error(`Ошибка отправки разбан-уведомления пользователю ${userId}:`, err);
     }
 
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+    // Безопасное удаление кнопок из админского сообщения
+    try {
+        await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+    } catch (err) {
+        if (err.description && err.description.includes('message is not modified')) {
+            // кнопки уже были убраны — не критично
+        } else {
+            console.error('Ошибка при удалении кнопок:', err);
+        }
+    }
 });
 
 // Автосохранение данных каждые 5 минут
