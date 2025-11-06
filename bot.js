@@ -423,6 +423,9 @@ bot.action(/approve_(\d+)/, async (ctx) => {
 
     if (!user) return;
 
+        // Убираем кнопки в админском сообщении
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+
 // ✅ Если это первая подписка — на канал админа
 if (!user.currentChannel) {
     await ctx.telegram.sendMessage(
@@ -506,16 +509,18 @@ if (user.currentChannel) {
     }
 });
 
-bot.action(/reject_(\d+)/, (ctx) => {
-    const userId = ctx.match[1];
-    const user = users.get(Number(userId));
+bot.action(/reject_(\d+)/, async (ctx) => {
+    const userId = Number(ctx.match[1]);
+    const user = users.get(userId);
+
+    // Убираем кнопки сразу
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 
     if (user) {
-        ctx.telegram.sendMessage(userId, 'Подписка не подтверждена, пожалуйста, вышлите скриншот с подпиской 📸');
+        await ctx.telegram.sendMessage(userId, '❌ Подписка не подтверждена, пожалуйста, отправьте скриншот снова 📸');
         user.step = 1; // Возврат к ожиданию скриншота
-        ctx.reply('Подписка отклонена.');
+        await ctx.reply('Подписка отклонена.');
     }
-    ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 });
 
 // Обработчик нажатия на кнопку "Подписаться еще"
@@ -792,6 +797,9 @@ bot.launch().then(() => {
 
 // Забанить пользователя
 bot.action(/ban_(\d+)/, async (ctx) => {
+    // Убираем кнопки в админском сообщении
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+
     const userId = Number(ctx.match[1]);
     const user = users.get(userId);
     if (!user) return;
@@ -805,8 +813,6 @@ bot.action(/ban_(\d+)/, async (ctx) => {
     } catch (err) {
         console.error(`Ошибка отправки бан-уведомления пользователю ${userId}:`, err);
     }
-
-   await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
 });
 
 // Разбанить пользователя
