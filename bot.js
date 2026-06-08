@@ -311,7 +311,7 @@ channels.push({
         ctx.reply(
             'Ссылка сохранена! Перед тем как начать, подпишитесь на мой Twitch канал 💖',
             Markup.inlineKeyboard([ 
-                Markup.button.url('Подписаться 💜', 'https://www.twitch.tv/komainn'), 
+                Markup.button.url('Подписаться 💜', 'https://www.twitch.tv/k1miwo'), 
                 Markup.button.callback('Проверить подписку ✅', 'check_subscription')
             ])
         );
@@ -337,7 +337,7 @@ channels.push({
         ctx.reply(
             'Ссылка обновлена! Перед тем как начать, подпишитесь на мой Twitch канал 💖',
             Markup.inlineKeyboard([ 
-                Markup.button.url('Подписаться 💜', 'https://www.twitch.tv/innkomaf16'),
+                Markup.button.url('Подписаться 💜', 'https://www.twitch.tv/k1miwo'),
                 Markup.button.callback('Проверить подписку ✅', 'check_subscription')
             ])
         );
